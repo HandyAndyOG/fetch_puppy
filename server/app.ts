@@ -1,10 +1,8 @@
 import express from 'express';
-
-
 import { Request, Response, Application } from 'express';
 const data = require("./data.json");
-
 const app: Application = express();
+
 
 interface Data {
   id: number;
@@ -12,6 +10,12 @@ interface Data {
   breed: string;
   birthDate: string
 }
+
+app.use(function(_, res, next) {
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 app.get('/api/test', (_req: Request, res: Response) => {
   return res.status(200).json({ test: 'is working as it should' });
 });
