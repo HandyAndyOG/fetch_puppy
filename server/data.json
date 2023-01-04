@@ -1,0 +1,28 @@
+{
+    "data": {
+        "puppies": [{
+            "id": 1,
+            "name": "Snow",
+            "breed": "Husky",
+            "birthDate": "2020/06/10"
+        },
+        {
+            "id": 2,
+            "name": "Willow",
+            "breed": "Pomeranian",
+            "birthDate": "2020/01/15"
+        },
+        {
+            "id": 3,
+            "name": "Cesar",
+            "breed": "Rottweiler",
+            "birthDate": "2006/04/07"
+        },
+        {
+            "id": 4,
+            "name": "Oskar",
+            "breed": "Pomeranian",
+            "birthDate": "2021/11/16"
+        }]
+    }
+}
