@@ -2,6 +2,7 @@ import express from 'express';
 import { Request, Response, Application } from 'express';
 const data = require("./data.json");
 const app: Application = express();
+const bp = require('body-parser')
 
 
 interface Data {
@@ -14,8 +15,12 @@ interface Data {
 app.use(function(_, res, next) {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   next();
 });
+app.use(bp.json())
+app.use(bp.urlencoded({ extended: true }))
+
 app.get('/api/test', (_req: Request, res: Response) => {
   return res.status(200).json({ test: 'is working as it should' });
 });
@@ -35,13 +40,14 @@ app.get('/api/puppies/:id', (_req: Request, res: Response) => {
     return res.status(404).send(e)
   }
 });
-app.post('/api/puppies', (_req: Request, res: Response) => {
+app.post('/api/puppies/', (_req: Request, res: Response) => {
+  console.log(_req.body)
   try {
     const newPuppy = {
       id: data.data.puppies.length + 1,
-      name: data.data.puppies.name,
-      breed: data.data.puppies.breed,
-      birthDate: data.data.puppies.birthDate
+      name: _req.body.name,
+      breed: _req.body.breed,
+      birthDate: _req.body.birthDate
     }
     data.data.puppies.push(newPuppy);
     return res.status(200).json(newPuppy);
