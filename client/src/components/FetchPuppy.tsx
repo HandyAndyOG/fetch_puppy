@@ -4,6 +4,7 @@ import './FetchPuppy.css'
 import AddPuppy from './AddPuppy'
 import { AiOutlineEdit } from 'react-icons/ai';
 import { GiCheckMark } from 'react-icons/gi';
+import { FaTrashAlt } from 'react-icons/fa';
 
 interface Puppies {
     id: number;
@@ -17,10 +18,12 @@ const FetchPuppy = () => {
     const [error, setError] = useState<string | null>(null);
     const [puppyId, setPuppyId] = useState<string>('');
     const [newPup, setNewPup] = useState<boolean>(false)
+    const [addedPupId, setAddedPupId] = useState<number | null>(null)
     const [changeName, setChangeName] = useState<string>()
     const [changeBreed, setChangeBreed] = useState<string>('')
     const [changeBirthDate, setChangeBirthDate] = useState<string>('')
     const [clicked, setClicked] = useState<{ [key:number]:boolean }>({});
+    const [deleted, setDeleted] = useState<string>('');
 
 const fetchDoggoById = () => {
     fetch(`http://localhost:8080/api/puppies/${puppyId}`)
@@ -28,7 +31,20 @@ const fetchDoggoById = () => {
         .then(data => setPuppies([data]))
         .catch(error => setError(error))
 }
-const onToggle = (value: boolean) => setNewPup(value);
+
+const deletePup = (id: number) => {
+    console.log(id)
+    if(id) {
+        setTimeout(() => {
+
+            fetch(`http://localhost:8080/api/puppies/${id}`, {
+                            method: 'DELETE',
+                        }).then(() => setDeleted('Delete successfull'))
+                        .catch(error => console.log(error))
+            setDeleted('');
+        }, 1000)
+    }
+}
 
 const editPup = (id: number) => {
     setClicked({ ...clicked, [id]: !clicked[id] });
@@ -53,6 +69,7 @@ const handleEditPup = (e: React.FormEvent<HTMLFormElement>, id: number) => {
 }
 
 useEffect(() => {
+    
     const fetchDoggos = () => {
         fetch('http://localhost:8080/api/puppies/')
             .then(response => response.json())
@@ -63,7 +80,8 @@ useEffect(() => {
     if(puppyId.length > 0) {
         fetchDoggoById();
     }
-}, [puppyId, newPup])
+    setAddedPupId(null);
+}, [puppyId, newPup, addedPupId, deleted])
 
   return (
     <>
@@ -77,9 +95,10 @@ useEffect(() => {
             <p>Breed: {clicked[puppy.id]  ? <input value={changeBreed} onChange={(e) => setChangeBreed(e.target.value)}/> : puppy.breed}</p>
             <p>Date of Birth: {clicked[puppy.id] ? <input value={changeBirthDate} onChange={(e) => setChangeBirthDate(e.target.value)}/> : puppy.birthDate}</p>
             {clicked[puppy.id]  ? <button><GiCheckMark type="submit"/></button> : <span><AiOutlineEdit onClick={() => editPup(puppy.id)}/></span>}
+            {<span><FaTrashAlt onClick={() => deletePup(puppy.id)}/></span>}
             </form></article>) : error}
     </section>
-    <AddPuppy prop={onToggle} newPup={newPup}/>
+    <AddPuppy setAddedPupId={setAddedPupId} />
     </>
   )
 }

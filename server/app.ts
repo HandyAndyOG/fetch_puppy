@@ -12,13 +12,13 @@ interface Data {
   breed: string;
   birthDate: string
 }
-
 app.use(function(_, res, next) {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   next();
 });
+
 app.use(bp.json())
 app.use(bp.urlencoded({ extended: true }))
 
@@ -47,7 +47,6 @@ app.get('/api/puppies/:id', (_req: Request, res: Response) => {
     })
 });
 app.post('/api/puppies/', (_req: Request, res: Response) => {
-  console.log(_req.body)
   fs.readFile(dataFile, 'utf8', (err: string, data: string) => {
     if (err) {
       return res.status(404).send('Error reading data file')
@@ -63,10 +62,10 @@ app.post('/api/puppies/', (_req: Request, res: Response) => {
     let addPuppy = JSON.stringify(puppyData)
     fs.writeFile(dataFile, addPuppy, 'utf-8', (err: string) => {
       if (err) {
-        res.status(500).send('Failed to update the database')
+        res.status(404).send('Failed to update the database')
         return
       }
-      return res.status(200).send('updated successfully')
+      return res.status(200).send(newPuppy.id.toString())
     })
     }
     return
@@ -85,16 +84,33 @@ app.post('/api/puppies/', (_req: Request, res: Response) => {
 //     return res.status(404).send('Not found')
 //   }
 // });
-// app.delete('/api/puppies/:id', (_req: Request, res: Response) => {
-//   try {
-//     const puppyId = Number(_req.params.id)
-//     const filteredPuppy = data.data.puppies.find((puppy: Data) => puppy.id === puppyId)
-//     const indexPuppy = data.data.puppies.indexOf(filteredPuppy)
-//     data.data.puppies.splice(indexPuppy,1)
-//     return res.status(200).json();
-//   } catch (e) {
-//     return res.status(404).send(e)
-//   }
-// });
+app.delete('/api/puppies/:id', (_req: Request, res: Response) => {
+  fs.readFile(dataFile, 'utf8', (err: string, data: string) => {
+    if (err) {
+      return res.status(404).send('Error reading data file')
+    } else {
+      const puppyData = JSON.parse(data)
+      const puppyId = Number(_req.params.id)
+      const filteredPuppy = puppyData.data.puppies.find((puppy: Data) => puppy.id === puppyId)
+      if(filteredPuppy) {
+        const indexPuppy = puppyData.data.puppies.indexOf(filteredPuppy)
+        puppyData.data.puppies.splice(indexPuppy,1)
+  
+      let newPuppyData = JSON.stringify(puppyData)
+      fs.writeFile(dataFile, newPuppyData, 'utf-8', (err: string) => {
+        if (err) {
+          res.status(404).send('Failed to update the database')
+          return
+        }
+        return res.status(200).send()
+      })
+      } else {
+        return res.status(404).send('Failed to update the database')
+      }
+
+      }
+    return
+  })
+});
 
 export default app;

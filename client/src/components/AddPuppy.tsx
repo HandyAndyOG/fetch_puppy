@@ -2,18 +2,16 @@ import React, { useState } from 'react'
 import './AddPuppy.css'
 
 interface Prop {
-  prop: (value: boolean) => void;
-  newPup: boolean
+  setAddedPupId: (value: number) => void;
 }
 
-const AddPuppy: React.FC<Prop> = ({prop, newPup}) => {
+const AddPuppy: React.FC<Prop> = ({ setAddedPupId }) => {
     const [pupName, setPupName] = useState<string>('')
     const [pupBreed, setPupBreed] = useState<string>('')
     const [pupBirth, setPupBirth] = useState<string>('')
 
 const handleNewPup = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    prop(!newPup)
     if(pupName && pupBreed && pupBirth) {
       fetch('http://localhost:8080/api/puppies/', {
                       method: 'POST',
@@ -22,7 +20,7 @@ const handleNewPup = (event: React.FormEvent<HTMLFormElement>) => {
                       },
                       body: JSON.stringify({name: pupName, breed: pupBreed, birthDate: pupBirth})
                   }).then(response => response.json())
-                  .then(data => console.log(data))
+                  .then(data => setAddedPupId(Number(data.id)))
                   .catch(error => console.log(error))
       setPupName('');
       setPupBirth('');
