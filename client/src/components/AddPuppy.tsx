@@ -14,18 +14,20 @@ const AddPuppy: React.FC<Prop> = ({prop, newPup}) => {
 const handleNewPup = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     prop(!newPup)
-    fetch('http://localhost:8080/api/puppies/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-type' : 'application/json'
-                    },
-                    body: JSON.stringify({name: pupName, breed: pupBreed, birthDate: pupBirth})
-                }).then(response => response.json())
-                .then(data => console.log(data))
-                .catch(error => console.log(error))
-    setPupName('');
-    setPupBirth('');
-    setPupBreed('');
+    if(pupName && pupBreed && pupBirth) {
+      fetch('http://localhost:8080/api/puppies/', {
+                      method: 'POST',
+                      headers: {
+                          'Content-type' : 'application/json'
+                      },
+                      body: JSON.stringify({name: pupName, breed: pupBreed, birthDate: pupBirth})
+                  }).then(response => response.json())
+                  .then(data => console.log(data))
+                  .catch(error => console.log(error))
+      setPupName('');
+      setPupBirth('');
+      setPupBreed('');
+    }
 }
 
   return (

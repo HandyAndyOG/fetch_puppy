@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid';
 import './FetchPuppy.css'
 import AddPuppy from './AddPuppy'
+import { AiOutlineEdit } from 'react-icons/ai';
+import { GiCheckMark } from 'react-icons/gi';
 
 interface Puppies {
     id: number;
@@ -15,6 +17,10 @@ const FetchPuppy = () => {
     const [error, setError] = useState<string | null>(null);
     const [puppyId, setPuppyId] = useState<string>('');
     const [newPup, setNewPup] = useState<boolean>(false)
+    const [changeName, setChangeName] = useState<string>()
+    const [changeBreed, setChangeBreed] = useState<string>('')
+    const [changeBirthDate, setChangeBirthDate] = useState<string>('')
+    const [clicked, setClicked] = useState<{ [key:number]:boolean }>({});
 
 const fetchDoggoById = () => {
     fetch(`http://localhost:8080/api/puppies/${puppyId}`)
@@ -24,12 +30,33 @@ const fetchDoggoById = () => {
 }
 const onToggle = (value: boolean) => setNewPup(value);
 
+const editPup = (id: number) => {
+    setClicked({ ...clicked, [id]: !clicked[id] });
+}
+
+const handleEditPup = (e: React.FormEvent<HTMLFormElement>, id: number) => {
+    e.preventDefault();
+    setClicked({ ...clicked, [id]: !clicked[id] });
+    fetch(`http://localhost:8080/api/puppies/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-type' : 'application/json'
+                    },
+                    body: JSON.stringify({name: changeName, breed: changeBreed, birthDate: changeBirthDate})
+                }).then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.log(error))
+    setChangeName('');
+    setChangeBirthDate('');
+    setChangeBreed('');
+    setNewPup(!newPup);
+}
 
 useEffect(() => {
     const fetchDoggos = () => {
         fetch('http://localhost:8080/api/puppies/')
             .then(response => response.json())
-            .then(data => setPuppies(data))
+            .then(data => setPuppies(data.data.puppies))
             .catch(error => setError(error))
     }
     fetchDoggos()
@@ -45,10 +72,12 @@ useEffect(() => {
     </div>
     <section className='container'>
         {puppies ? puppies.map((puppy: Puppies) => <article className="puppy--container" key={uuidv4()}>
-            <h1>Name: {puppy.name}</h1><span>ID: {puppy.id}</span>
-            <p>Breed: {puppy.breed}</p>
-            <p>Date of Birth: {puppy.birthDate}</p>
-        </article>) : error}
+            <form onSubmit={(e) => handleEditPup(e, puppy.id)}>
+            <h1>Name: {clicked[puppy.id] ? <input value={changeName} onChange={(e) => setChangeName(e.target.value)}/> : puppy.name}</h1><span>ID: {puppy.id}</span>
+            <p>Breed: {clicked[puppy.id]  ? <input value={changeBreed} onChange={(e) => setChangeBreed(e.target.value)}/> : puppy.breed}</p>
+            <p>Date of Birth: {clicked[puppy.id] ? <input value={changeBirthDate} onChange={(e) => setChangeBirthDate(e.target.value)}/> : puppy.birthDate}</p>
+            {clicked[puppy.id]  ? <button><GiCheckMark type="submit"/></button> : <span><AiOutlineEdit onClick={() => editPup(puppy.id)}/></span>}
+            </form></article>) : error}
     </section>
     <AddPuppy prop={onToggle} newPup={newPup}/>
     </>
@@ -56,3 +85,5 @@ useEffect(() => {
 }
 
 export default FetchPuppy
+
+

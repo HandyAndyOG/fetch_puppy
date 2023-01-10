@@ -1,8 +1,9 @@
 import express from 'express';
 import { Request, Response, Application } from 'express';
-const data = require("./data.json");
+const dataFile = "data.json";
 const app: Application = express();
 const bp = require('body-parser')
+const fs = require('fs')
 
 
 interface Data {
@@ -25,58 +26,75 @@ app.get('/api/test', (_req: Request, res: Response) => {
   return res.status(200).json({ test: 'is working as it should' });
 });
 app.get('/api/puppies', (_req: Request, res: Response) => {
-  try {
-    return res.status(200).send(data.data.puppies);
-  } catch (e) {
-    return res.status(404).send(e)
-  }
+    fs.readFile(dataFile, 'utf8', (err: string, data: string) => {
+      if (err) {
+        return res.status(404).send('Error reading data file')
+      } else {
+      return res.status(200).json(JSON.parse(data));
+      }
+    })
 });
 app.get('/api/puppies/:id', (_req: Request, res: Response) => {
-  try {
-    const puppyId = Number(_req.params.id)
-    const filteredPuppy = data.data.puppies.find((puppy: Data) => puppy.id === puppyId)
-    return res.status(200).json(filteredPuppy);
-  } catch (e) {
-    return res.status(404).send(e)
-  }
+    fs.readFile(dataFile, 'utf8', (err: string, data: string) => {
+      if (err) {
+        return res.status(404).send('Error reading data file')
+      } else {
+      const puppyId = Number(_req.params.id)
+      const puppyData = JSON.parse(data)
+      const filteredPuppy = puppyData.data.puppies.find((puppy: Data) => puppy.id === puppyId)
+      return res.status(200).send(filteredPuppy);
+      }
+    })
 });
 app.post('/api/puppies/', (_req: Request, res: Response) => {
   console.log(_req.body)
-  try {
-    const newPuppy = {
-      id: data.data.puppies.length + 1,
-      name: _req.body.name,
-      breed: _req.body.breed,
-      birthDate: _req.body.birthDate
+  fs.readFile(dataFile, 'utf8', (err: string, data: string) => {
+    if (err) {
+      return res.status(404).send('Error reading data file')
+    } else {
+      const puppyData = JSON.parse(data)
+      const newPuppy = {
+        id: puppyData.data.puppies.length + 1,
+        name: _req.body.name,
+        breed: _req.body.breed,
+        birthDate: _req.body.birthDate
     }
-    data.data.puppies.push(newPuppy);
-    return res.status(200).json(newPuppy);
-  } catch (e) {
-    return res.status(404).send(e)
-  }
+    puppyData.data.puppies.push(newPuppy);
+    let addPuppy = JSON.stringify(puppyData)
+    fs.writeFile(dataFile, addPuppy, 'utf-8', (err: string) => {
+      if (err) {
+        res.status(500).send('Failed to update the database')
+        return
+      }
+      return res.status(200).send('updated successfully')
+    })
+    }
+    return
+  })
 });
-app.put('/api/puppies/:id', (_req: Request, res: Response) => {
-  const puppyId = Number(_req.params.id)
-  const filteredPuppy = data.data.puppies.find((puppy: Data) => puppy.id === puppyId)
-  if(filteredPuppy) {
-    filteredPuppy.name = _req.body.name,
-    filteredPuppy.breed = _req.body.breed,
-    filteredPuppy.birthDate = _req.body.birthDate
-    return res.status(200).json(filteredPuppy);
-  } else {
-    return res.status(404).send('Not found')
-  }
-});
-app.delete('/api/puppies/:id', (_req: Request, res: Response) => {
-  try {
-    const puppyId = Number(_req.params.id)
-    const filteredPuppy = data.data.puppies.find((puppy: Data) => puppy.id === puppyId)
-    const indexPuppy = data.data.puppies.indexOf(filteredPuppy)
-    data.data.puppies.splice(indexPuppy,1)
-    return res.status(200).json();
-  } catch (e) {
-    return res.status(404).send(e)
-  }
-});
+// app.put('/api/puppies/:id', (_req: Request, res: Response) => {
+//   console.log(_req.body)
+//   const puppyId = Number(_req.params.id)
+//   const filteredPuppy = data.data.puppies.find((puppy: Data) => puppy.id === puppyId)
+//   if(filteredPuppy) {
+//     filteredPuppy.name = _req.body.name,
+//     filteredPuppy.breed = _req.body.breed,
+//     filteredPuppy.birthDate = _req.body.birthDate
+//     return res.status(200).json(filteredPuppy);
+//   } else {
+//     return res.status(404).send('Not found')
+//   }
+// });
+// app.delete('/api/puppies/:id', (_req: Request, res: Response) => {
+//   try {
+//     const puppyId = Number(_req.params.id)
+//     const filteredPuppy = data.data.puppies.find((puppy: Data) => puppy.id === puppyId)
+//     const indexPuppy = data.data.puppies.indexOf(filteredPuppy)
+//     data.data.puppies.splice(indexPuppy,1)
+//     return res.status(200).json();
+//   } catch (e) {
+//     return res.status(404).send(e)
+//   }
+// });
 
 export default app;
