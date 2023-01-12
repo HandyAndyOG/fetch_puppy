@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid';
 import './FetchPuppy.css'
-import AddPuppy from './AddPuppy'
 import { AiOutlineEdit } from 'react-icons/ai';
 import { GiCheckMark } from 'react-icons/gi';
 import { FaTrashAlt } from 'react-icons/fa';
+import { Modal } from './Modal'
+import { AddModal } from './AddModal';
 
 interface Puppies {
     id: number;
+    name: string;
+    breed: string;
+    birthDate: string;
+}
+interface NewPuppy {
     name: string;
     breed: string;
     birthDate: string;
@@ -17,13 +23,15 @@ const FetchPuppy = () => {
     const [puppies, setPuppies] = useState<Puppies[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [puppyId, setPuppyId] = useState<string>('');
-    const [newPup, setNewPup] = useState<boolean>(false)
     const [addedPupId, setAddedPupId] = useState<number | null>(null)
-    const [changeName, setChangeName] = useState<string>()
-    const [changeBreed, setChangeBreed] = useState<string>('')
-    const [changeBirthDate, setChangeBirthDate] = useState<string>('')
+    const [selectedPup, setSelectedPup] = useState<number | null>(null)
+    const [selectedPupName, setSelectedPupName] = useState<string>('')
+    const [selectedPupBreed, setSelectedPupBreed] = useState<string>('')
+    const [selectedPupBirth, setSelectedPupBirth] = useState<string>('')
     const [clicked, setClicked] = useState<{ [key:number]:boolean }>({});
     const [deleted, setDeleted] = useState<string>('');
+    const [modal, setModal] = useState<boolean>(false)
+    const [addModal, setAddModal] = useState<boolean>(false)
 
 const fetchDoggoById = () => {
     fetch(`http://localhost:8080/api/puppies/${puppyId}`)
@@ -33,43 +41,31 @@ const fetchDoggoById = () => {
 }
 
 const deletePup = (id: number) => {
-    console.log(id)
     if(id) {
         setTimeout(() => {
-
             fetch(`http://localhost:8080/api/puppies/${id}`, {
                             method: 'DELETE',
                         }).then(() => setDeleted('Delete successfull'))
                         .catch(error => console.log(error))
             setDeleted('');
-        }, 1000)
+        }, 200)
     }
 }
 
-const editPup = (id: number) => {
+const editPup = (id: number, name: string, birth: string, breed: string) => {
+    setSelectedPupName(name)
+    setSelectedPupBreed(breed)
+    setSelectedPupBirth(birth)
+    setSelectedPup(id)
+    setModal(!modal)
     setClicked({ ...clicked, [id]: !clicked[id] });
 }
 
-const handleEditPup = (e: React.FormEvent<HTMLFormElement>, id: number) => {
-    e.preventDefault();
-    setClicked({ ...clicked, [id]: !clicked[id] });
-    fetch(`http://localhost:8080/api/puppies/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-type' : 'application/json'
-                    },
-                    body: JSON.stringify({name: changeName, breed: changeBreed, birthDate: changeBirthDate})
-                }).then(response => response.json())
-                .then(data => console.log(data))
-                .catch(error => console.log(error))
-    setChangeName('');
-    setChangeBirthDate('');
-    setChangeBreed('');
-    setNewPup(!newPup);
+const addPuppy = () => {
+    setAddModal(!addModal)
 }
 
 useEffect(() => {
-    
     const fetchDoggos = () => {
         fetch('http://localhost:8080/api/puppies/')
             .then(response => response.json())
@@ -81,7 +77,7 @@ useEffect(() => {
         fetchDoggoById();
     }
     setAddedPupId(null);
-}, [puppyId, newPup, addedPupId, deleted])
+}, [puppyId, addedPupId, deleted])
 
   return (
     <>
@@ -89,16 +85,19 @@ useEffect(() => {
     <label>Filter by id: </label><input value={puppyId} onChange={(event) => setPuppyId(event.target.value)} placeholder='e.g. 1, 2, 3...'/>
     </div>
     <section className='container'>
+        <button onClick={addPuppy}>Add</button>
         {puppies ? puppies.map((puppy: Puppies) => <article className="puppy--container" key={uuidv4()}>
-            <form onSubmit={(e) => handleEditPup(e, puppy.id)}>
-            <h1>Name: {clicked[puppy.id] ? <input value={changeName} onChange={(e) => setChangeName(e.target.value)}/> : puppy.name}</h1><span>ID: {puppy.id}</span>
-            <p>Breed: {clicked[puppy.id]  ? <input value={changeBreed} onChange={(e) => setChangeBreed(e.target.value)}/> : puppy.breed}</p>
-            <p>Date of Birth: {clicked[puppy.id] ? <input value={changeBirthDate} onChange={(e) => setChangeBirthDate(e.target.value)}/> : puppy.birthDate}</p>
-            {clicked[puppy.id]  ? <button><GiCheckMark type="submit"/></button> : <span><AiOutlineEdit onClick={() => editPup(puppy.id)}/></span>}
+            <form>
+            <h1>Name: {puppy.name}</h1><span>ID: {puppy.id}</span>
+            <p>Breed: {puppy.breed}</p>
+            <p>Date of Birth: {puppy.birthDate}</p>
+            <span><AiOutlineEdit onClick={() => editPup(puppy.id, puppy.name, puppy.birthDate, puppy.breed)}/></span>
             {<span><FaTrashAlt onClick={() => deletePup(puppy.id)}/></span>}
             </form></article>) : error}
+            {modal ? <Modal selectedPup={selectedPup} setAddedPupId={setAddedPupId} setSelectedPup={setSelectedPup} setModal={setModal} selectedPupName={selectedPupName} selectedPupBreed={selectedPupBreed} selectedPupBirth={selectedPupBirth}/> : ''}
     </section>
-    <AddPuppy setAddedPupId={setAddedPupId} />
+    {addModal ? <AddModal setAddModal={setAddModal} setAddedPupId={setAddedPupId} /> : ''}
+    
     </>
   )
 }

@@ -3,9 +3,10 @@ import './AddPuppy.css'
 
 interface Prop {
   setAddedPupId: (value: number) => void;
+  setAddModal: (value: boolean) => void;
 }
 
-const AddPuppy: React.FC<Prop> = ({ setAddedPupId }) => {
+const AddPuppy: React.FC<Prop> = ({ setAddedPupId, setAddModal }) => {
     const [pupName, setPupName] = useState<string>('')
     const [pupBreed, setPupBreed] = useState<string>('')
     const [pupBirth, setPupBirth] = useState<string>('')
@@ -25,6 +26,7 @@ const handleNewPup = (event: React.FormEvent<HTMLFormElement>) => {
       setPupName('');
       setPupBirth('');
       setPupBreed('');
+      setAddModal(false)
     }
 }
 
